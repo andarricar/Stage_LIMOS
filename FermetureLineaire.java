@@ -1,5 +1,6 @@
 package Stage_LIMOS;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -7,6 +8,8 @@ public class FermetureLineaire{
     public static void main(String[] args) {
 
         String univers = "ABCDEF";
+        System.out.println("Univers :" + univers);
+        System.out.println("");
 
         /* Définition des DFs */
         DFs dF0 = new DFs("A","BC");
@@ -26,16 +29,25 @@ public class FermetureLineaire{
         for (int i = 0 ; i < DFs.getCompteurDfs(); i++){
             DFs.AfficherDf(setOfDFs.get(i));
         }
+        System.out.println("");
 
-        /* Calcul des fermetures de chaque attribut et stockage dans dico<attribut, sa fermeture> */
-        Dictionary<String, StringBuilder> FermetureDeChaqueAttribut = new Hashtable<String, StringBuilder>();
-        for (int i = 0; i < univers.length(); i++){
-            String attribut = String.valueOf(univers.charAt(i));
-            StringBuilder fermeture = AlgoFermetureLineaire(setOfDFs,attribut);
-            FermetureDeChaqueAttribut.put(attribut, fermeture);
-            System.out.println("Fermeture de " + attribut + " par rapport à F = " + fermeture.toString());
+        /* Calcul de tous les fermés */
+        ArrayList<String> ensembleDesFermes = new ArrayList<String>();
+        AllClosures(ensembleDesFermes, univers, setOfDFs);
+
+        /* Affichage de l'ensemble des fermés */
+        System.out.println("Ensemble de tous les fermés : ");
+        System.out.print("{");
+        for (int i = 0 ; i < ensembleDesFermes.size() - 1; i++){
+            System.out.print(ensembleDesFermes.get(i) + " , ");
         }
+        System.out.print(ensembleDesFermes.get(ensembleDesFermes.size() - 1));
+        System.out.print("}");
     }
+
+    /* ---------------------------------------------------------------------------------------*/
+    /* -------------------------------FERMETURE LINEAIRE--------------------------------------*/
+    /* ---------------------------------------------------------------------------------------*/
 
     /* Algorithme : fermeture linéaire */
     public static StringBuilder AlgoFermetureLineaire(ArrayList<DFs> F, String attributDeFermeture){
@@ -79,6 +91,7 @@ public class FermetureLineaire{
             }
 
         }
+        fermeture = TriRapideOrdreAlphabétique(fermeture);
         return fermeture;
     }
 
@@ -102,7 +115,6 @@ public class FermetureLineaire{
     }
 
     /* Fonction W absent dans fermeture */
-    /* Retourne true si W est présent et false sinon */
     public static String AbsentDansFermeture(String partieDroite, String fermeture){
         String absent = new String();
         for (int i = 0 ; i < partieDroite.length(); i++){
@@ -133,4 +145,122 @@ public class FermetureLineaire{
         }
         return copie;
     }
+
+    /* ---------------------------------------------------------------------------------------*/
+    /* -------------------------------NEXT CLOSURE--------------------------------------------*/
+    /* ---------------------------------------------------------------------------------------*/
+
+    /* Fonction NextClosure : calcul du fermé suivant */
+    public static StringBuilder NextClosure(StringBuilder A, String univers, ArrayList<DFs> ensembleDfs){
+        int longueurUnivers = univers.length();
+        String maxAttribut = String.valueOf(univers.charAt(longueurUnivers - 1));
+        StringBuilder attribut = new StringBuilder(maxAttribut);
+        boolean success = false;
+        int indiceBoucleDo = 0;
+        do{
+            /* Première itération, il faut traiter l'attribut max avant de traiter ses prédéceseurs */
+            if(indiceBoucleDo != 0){
+                attribut = predecesseurString(attribut, univers);
+            }
+            if (!A.toString().contains(attribut.toString())){
+                String Asaved = A.toString();
+                A = ConserverElementInferieurAttribut(A, attribut, univers);
+                StringBuilder fermetureA = AlgoFermetureLineaire(ensembleDfs,A.toString());
+                if(!PresenceNewAttributInfA(attribut, A, fermetureA, univers)){
+                    A = fermetureA;
+                    success = true;
+                }
+                else{
+                    A = new StringBuilder(Asaved);
+                }
+            }
+            indiceBoucleDo++;
+        }while ((!success) && (univers.indexOf(attribut.toString()) != 0));
+        return A;
+    }
+
+    /* Fonction prédecesseur dans un String */
+    /* Retourne le prédecesseur s'il y en a un sinon, retourne l'attribut donné en entrée */
+    public static StringBuilder predecesseurString (StringBuilder caractere, String chaine){
+        int indiceAttribut = chaine.indexOf(caractere.toString());
+        if ((indiceAttribut < chaine.length()) && (indiceAttribut > 0)){
+            String att = String.valueOf(chaine.charAt(indiceAttribut - 1));
+            caractere = new StringBuilder(att);
+        }
+        return caractere;
+    }
+
+    /* Fonction qui garde uniquement les éléments inférieurs à attribut dans A */
+    public static StringBuilder ConserverElementInferieurAttribut (StringBuilder A, StringBuilder attribut, String univers){
+        A.append(attribut.toString());
+        StringBuilder newA = new StringBuilder();
+        int indiceAttribut = univers.indexOf(attribut.toString());
+        for(int i = 0; i < A.length(); i++){
+            int indiceTemp = univers.indexOf(A.charAt(i));
+            if (indiceTemp <= indiceAttribut)
+                newA.append(A.charAt(i));
+        }
+        return newA;
+    }
+
+    /* Fonction PresenceNewAttributInfA qui indique si fermetureA\A possède un attribut inférieur à attribut */
+    /* Fonction retroune true s'il y en a au moins un, false sinon */
+    public static boolean PresenceNewAttributInfA(StringBuilder attribut, StringBuilder A, StringBuilder fermetureA, String univers){
+        boolean present = false;
+        StringBuilder fermeturePriveeDeA = new StringBuilder();
+        /* Création de l'ensemble fermetureA\A */
+        for(int i = 0; i < fermetureA.length(); i++){
+            if(!A.toString().contains(String.valueOf(fermetureA.charAt(i)))){
+                fermeturePriveeDeA.append(fermetureA.charAt(i));
+            }
+        }
+        int indiceAttribut = univers.indexOf(attribut.toString());
+        /* Suppression des éléments >= attribut*/
+        int i = 0; //indice de la boucle while
+        while ((!present) && (i < fermeturePriveeDeA.length())){
+            int indiceTemp = univers.indexOf(String.valueOf(fermeturePriveeDeA.charAt(i)));
+            if (indiceAttribut > indiceTemp)
+                present = true;
+            i++;
+        }
+        return present;
+    }
+
+    /* Fonction tri par ordre alphabétique */
+    public static StringBuilder TriRapideOrdreAlphabétique (StringBuilder chaine) {
+        int taille = chaine.length();
+        int chaineAscii[] = new int[taille];
+        for (int i = 0; i < taille; i++){
+            chaineAscii[i] = chaine.charAt(i);
+        }
+        Arrays.sort(chaineAscii);
+        chaine = new StringBuilder();
+        for (int i = 0; i < taille; i++){
+            chaine.append(String.valueOf((char)chaineAscii[i]));
+        }
+        return chaine;
+    }
+
+    /* ---------------------------------------------------------------------------------------*/
+    /* -------------------------------ALL CLOSURES--------------------------------------------*/
+    /* ---------------------------------------------------------------------------------------*/
+
+    public static void AllClosures (ArrayList<String> ensembleDesFermes, String univers, ArrayList<DFs> F){
+        ensembleDesFermes.add("");
+        String Asaved = new String();
+        StringBuilder fermeSuivant = new StringBuilder();
+        boolean fini = false;
+        do {
+            int taille = ensembleDesFermes.size();
+            Asaved = ensembleDesFermes.get(taille - 1);
+            StringBuilder A = new StringBuilder(Asaved);
+            fermeSuivant = NextClosure(A, univers, F);
+            fini = Asaved.equals(fermeSuivant.toString());
+            if (!fini)
+                ensembleDesFermes.add(fermeSuivant.toString());
+        } while (!fini);
+
+    }
+
+
 }
