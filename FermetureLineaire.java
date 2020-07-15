@@ -5,6 +5,7 @@ public class FermetureLineaire{
     public static void main(String[] args) {
 
         String univers = "ABCDEF";
+        //String univers = "ABC";
         System.out.println("Univers :" + univers);
         System.out.println("");
 
@@ -13,6 +14,8 @@ public class FermetureLineaire{
         DFs dF1 = new DFs("E", "CF");
         DFs dF2 = new DFs("B", "E");
         DFs dF3 = new DFs("CD", "EF");
+        //DFs dF0 = new DFs("A", "B");
+        //DFs dF1 = new DFs("", "C");
 
         /* Création de l'ensemble de DFs */
         ArrayList<DFs> setOfDFs = new ArrayList<DFs>();
@@ -52,7 +55,7 @@ public class FermetureLineaire{
         System.out.println();
 
         /* Calcul des inf-irréductibles */
-        ArrayList<String> listeInfIrreductibles = EnsembleInfIrreductibles(pereFils,ensembleDesFermes);
+        ArrayList<String> listeInfIrreductibles = EnsembleInfIrreductibles(pereFils,ensembleDesFermes, univers);
         AffichageInfIrreductibles(listeInfIrreductibles);
 
     }
@@ -65,6 +68,7 @@ public class FermetureLineaire{
     public static StringBuilder AlgoFermetureLineaire(ArrayList<DFs> F, String attributDeFermeture){
         // Analyse attribut->Dfs
 
+        String fermetureDuVide = new String();
         //Liste de DF pour chaque attribut X
         //Dictionnaire (Attribut, Liste de DFs impliquées à partir de cet attribut
         Dictionary<String, ArrayList<DFs>> listeDFs = new Hashtable<String, ArrayList<DFs>>();
@@ -74,15 +78,22 @@ public class FermetureLineaire{
         int compteurDFs =  DFs.getCompteurDfs();
         for(int i = 0 ; i < compteurDFs; i++){
             compteurPartieGauche.put(F.get(i), F.get(i).partieGauche.length());
-            for(int j = 0; j < compteurPartieGauche.get(F.get(i)); j++){
-                String attributString = String.valueOf(F.get(i).partieGauche.charAt(j));
-                AjoutDfListeAttribut(attributString, F.get(i), listeDFs);
+            if (compteurPartieGauche.get(F.get(i)) == 0){
+                fermetureDuVide = fermetureDuVide + F.get(i).partieDroite;
+            }
+            else {
+                for(int j = 0; j < compteurPartieGauche.get(F.get(i)); j++){
+                    String attributString = String.valueOf(F.get(i).partieGauche.charAt(j));
+                    AjoutDfListeAttribut(attributString, F.get(i), listeDFs);
+                }
             }
         }
 
-        // Initialisation
-        StringBuilder fermeture = new StringBuilder(attributDeFermeture);
-        String update = attributDeFermeture;
+        // Initialisation de la fermeture par l'attribu et la fermeture du vide
+        StringBuilder fermeture = new StringBuilder(attributDeFermeture + fermetureDuVide);
+
+        // Initialisation avec la fermeture initiale;
+        String update = fermeture.toString();
 
         // Calcul de la fermeture
         while (!update.isEmpty())
@@ -260,7 +271,8 @@ public class FermetureLineaire{
     /* ---------------------------------------------------------------------------------------*/
 
     public static void AllClosures (ArrayList<String> ensembleDesFermes, String univers, ArrayList<DFs> F){
-        ensembleDesFermes.add("");
+        // Initialisation de l'ensemble des fermés avec la fermeture du vide
+        ensembleDesFermes.add(AlgoFermetureLineaire(F,"").toString());
         String Asaved = new String();
         StringBuilder fermeSuivant = new StringBuilder();
         boolean fini = false;
@@ -300,7 +312,13 @@ public class FermetureLineaire{
     public static void GrapheFermes (Dictionary<String, ArrayList<String>> pereFils, ArrayList<String> tousLesFermes, String univers){
         Dictionary<Integer, ArrayList<String>> triParTaille = new Hashtable<Integer, ArrayList<String>>();
         TrierParTaille(triParTaille, tousLesFermes, univers);
-        // Création du dictionnaire père fils
+        // Création du dictionnaire père
+
+        // Initialisation liste fermés sans père
+        ArrayList<String> listeOrphelins = new ArrayList<String>();
+        // Copie de la liste des fermés excepté la racine
+        for (int i = 1; i < tousLesFermes.size(); i++)
+            listeOrphelins.add(tousLesFermes.get(i));
 
         // Boucle for jusqu'à univers.length +1 car l'ensemble vide est traité
         for (int generationI = 0; generationI < univers.length() + 1; generationI++){
@@ -310,14 +328,13 @@ public class FermetureLineaire{
                 // Pour chaque fermé, on regarde s'il a des fils de longueur=generation +1
                 for (int j = 0 ; j < listeFermeLongueurI.size(); j++){
                     String pere = listeFermeLongueurI.get(j);
-                    ArrayList<String> listeFils = RechercheFils(triParTaille, pere, univers);
+                    ArrayList<String> listeFils = RechercheFils(triParTaille, pere, univers, listeOrphelins);
                     //On ajoute le fermé dans le dictionnaire père/fils
                     pereFils.put(listeFermeLongueurI.get(j), listeFils);
                 }
             }
         }
         // Vérification que tout fermé a un père
-        ArrayList<String> listeOrphelins = RechercheOrphelins(pereFils, tousLesFermes);
         if (!listeOrphelins.isEmpty()){
             // S'il y a des fermés sans père, il faut trouver leurs ancêtres les plus proches
             for (int i = 0; i < listeOrphelins.size(); i++){
@@ -361,7 +378,7 @@ public class FermetureLineaire{
 
     /* Fonction Recherche fils */
     /* Retourne la liste des fils */
-    public static ArrayList<String> RechercheFils(Dictionary<Integer, ArrayList<String>> triParTaille, String pere, String univers) {
+    public static ArrayList<String> RechercheFils(Dictionary<Integer, ArrayList<String>> triParTaille, String pere, String univers, ArrayList<String> listeOrphelins) {
         ArrayList<String> listeFils = new ArrayList<String>();
         int generationFils = pere.length() + 1;
         // Boucle while jusqu'à univers.length +1 car l'ensemble vide est traité
@@ -371,32 +388,14 @@ public class FermetureLineaire{
                 for (int k = 0; k < listeFilsPotentiels.size(); k++) {
                     if (InclusionString(pere, listeFilsPotentiels.get(k))) {
                         listeFils.add(listeFilsPotentiels.get(k));
+                        if (listeOrphelins.contains(listeFilsPotentiels.get(k)))
+                            listeOrphelins.remove(listeFilsPotentiels.get(k));
                     }
                 }
             }
             generationFils++;
         }
         return listeFils;
-    }
-
-    /* Fonction Orphelin pour vérifier que tout fermé a un père excepté l'ensemble vide qui est la racine du graphe */
-    /* Retourne la liste des orphelins */
-    public static ArrayList<String> RechercheOrphelins(Dictionary<String, ArrayList<String>> pereFils, ArrayList<String> ensembleDesFermes){
-        ArrayList<String> listeOrphelins = new ArrayList<String>();
-        // Copie de la liste des fermés
-        for (int i = 0; i < ensembleDesFermes.size(); i++)
-            listeOrphelins.add(ensembleDesFermes.get(i));
-        // Parcours du dictionnaire graphe
-        for (int i = 0; i < ensembleDesFermes.size(); i++){
-            for(int k = 0; k < pereFils.get(ensembleDesFermes.get(i)).size(); k++) {
-                if (listeOrphelins.contains(pereFils.get(ensembleDesFermes.get(i)).get(k))){
-                    listeOrphelins.remove(pereFils.get(ensembleDesFermes.get(i)).get(k));
-                }
-            }
-        }
-        //Suppression de l'ensemble vide qui n'a pas de père car c'est la racine
-        listeOrphelins.remove("");
-        return listeOrphelins;
     }
 
     /* Fonction Recherche pères */
@@ -441,15 +440,14 @@ public class FermetureLineaire{
     /* -------------------------------INF IRREDUCTIBLES---------------------------------------*/
     /* ---------------------------------------------------------------------------------------*/
 
-    public static ArrayList<String> EnsembleInfIrreductibles(Dictionary<String, ArrayList<String>> pereFils, ArrayList<String> ensembleDesFermes){
+    public static ArrayList<String> EnsembleInfIrreductibles(Dictionary<String, ArrayList<String>> pereFils, ArrayList<String> ensembleDesFermes, String univers){
         ArrayList<String> listeInfIrreductibles = new ArrayList<String>();
-        //Copie de l'ensemble des fermés sans le 1er et le dernier élément qui sont l'espace vide et l'univers car ce ne sont pas des inf-irréductibles par définition
-        for (int i = 1; i < ensembleDesFermes.size() - 1; i++)
-            listeInfIrreductibles.add(ensembleDesFermes.get(i));
-        //Parcours du dictionnaire en regardant le nombre de fils (sans espace vide et univers) : s'il est < 2 alors le fermé est un inf-irréductible
-        for(int i = 1; i < ensembleDesFermes.size() -1 ; i++){
-            if (pereFils.get(ensembleDesFermes.get(i)).size() >= 2)
-                listeInfIrreductibles.remove(ensembleDesFermes.get(i));
+
+        //Parcours du dictionnaire en regardant le nombre de fils de chaque fermé : s'il est < 2 alors le fermé est un inf-irréductible
+        for(int i = 0; i < ensembleDesFermes.size(); i++){
+            // Tout fermé a au moins un fils sauf l'univers qui en a 0 mais l'univers n'est pas un inf-irréductible par définition
+            if (pereFils.get(ensembleDesFermes.get(i)).size() == 1)
+                listeInfIrreductibles.add(ensembleDesFermes.get(i));
         }
         return listeInfIrreductibles;
     }
