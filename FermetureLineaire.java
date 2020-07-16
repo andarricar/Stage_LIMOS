@@ -4,25 +4,25 @@ import java.util.*;
 public class FermetureLineaire{
     public static void main(String[] args) {
 
-        String univers = "ABCDEF";
-        //String univers = "ABC";
+        //String univers = "ABCDEF";
+        String univers = "ABC";
         System.out.println("Univers :" + univers);
         System.out.println("");
 
         /* Définition des DFs */
-        DFs dF0 = new DFs("A", "BC");
+        /*DFs dF0 = new DFs("A", "BC");
         DFs dF1 = new DFs("E", "CF");
         DFs dF2 = new DFs("B", "E");
-        DFs dF3 = new DFs("CD", "EF");
-        //DFs dF0 = new DFs("A", "B");
-        //DFs dF1 = new DFs("", "C");
+        DFs dF3 = new DFs("CD", "EF");*/
+        DFs dF0 = new DFs("A", "B");
+        DFs dF1 = new DFs("", "C");
 
         /* Création de l'ensemble de DFs */
         ArrayList<DFs> setOfDFs = new ArrayList<DFs>();
         setOfDFs.add(dF0);
         setOfDFs.add(dF1);
-        setOfDFs.add(dF2);
-        setOfDFs.add(dF3);
+        /*setOfDFs.add(dF2);
+        setOfDFs.add(dF3);*/
 
         /* Affichage de l'ensemble de DFS */
         System.out.println("Ensemble de dépendances fonctionnelles : ");
@@ -43,20 +43,25 @@ public class FermetureLineaire{
         TreeMap arbreFermes = new TreeMap<String, Boolean>();
         ArbreFermes(arbreFermes, ensembleDesFermes);
         arbreFermes.headMap("");
-        System.out.println("Arbre des fermés : " + arbreFermes.keySet());
-        System.out.println();
+        //System.out.println("Arbre des fermés : " + arbreFermes.keySet());
+        //System.out.println();
 
         /* Création du graphe père/fils */
         Dictionary<String, ArrayList<String>> pereFils = new Hashtable<String, ArrayList<String>>();
         GrapheFermes(pereFils, ensembleDesFermes, univers);
 
         /* Affichage du graphe */
-        AffichagePereFils(pereFils, ensembleDesFermes);
-        System.out.println();
+        //AffichagePereFils(pereFils, ensembleDesFermes);
+        //System.out.println();
 
         /* Calcul des inf-irréductibles */
         ArrayList<String> listeInfIrreductibles = EnsembleInfIrreductibles(pereFils,ensembleDesFermes, univers);
         AffichageInfIrreductibles(listeInfIrreductibles);
+        System.out.println();
+
+        /* Calcul relation exemple */
+        int [][] relationExemple = CreationRelationExemple(listeInfIrreductibles, univers);
+        AffichageRelationExemple(relationExemple, listeInfIrreductibles, univers);
 
     }
 
@@ -457,6 +462,66 @@ public class FermetureLineaire{
     public static void AffichageInfIrreductibles(ArrayList<String> ensembleInfIrreductibles){
         System.out.println("Ensemble des inf-irréductibles : ");
         AfficherListe(ensembleInfIrreductibles);
+    }
+
+
+    /* ---------------------------------------------------------------------------------------*/
+    /* -------------------------------RELATION EXEMPLE----------------------------------------*/
+    /* ---------------------------------------------------------------------------------------*/
+
+    public static int[][] CreationRelationExemple (ArrayList<String> listeInfIrreductibles, String univers){
+        int[][] relationExemple = new int[listeInfIrreductibles.size() + 1][univers.length()];
+        // Initialisation de la première ligne
+        for(int j = 0; j < univers.length(); j++)
+            relationExemple[0][j] = 0;
+        // Construction de la matrice
+        for (int i = 0 ; i < listeInfIrreductibles.size(); i++){
+            for(int j = 0 ; j < univers.length(); j++){
+                if(listeInfIrreductibles.get(i).contains(String.valueOf(univers.charAt(j))))
+                    relationExemple[i+1][j] = relationExemple[i][j];
+                else
+                    relationExemple[i+1][j] = relationExemple[i][j] + 1;
+            }
+        }
+        return relationExemple;
+    }
+
+    public static void AffichageRelationExemple(int[][] relationExemple, ArrayList<String> listeInfIrreductibles, String univers){
+        System.out.println("Relation exemple :");
+        //Première ligne
+        for (int i = 0; i < univers.length(); i++)
+            System.out.print(" ");
+        System.out.print(" | ");
+        for (int i = 0; i < univers.length(); i++)
+            System.out.print(" " + univers.charAt(i) + " ");
+        System.out.println();
+
+        //Ligne
+        int tailleLigne = 4*univers.length() + 3 ;
+        for(int k = 0 ; k < tailleLigne; k++){
+            System.out.print("_");
+        }
+        System.out.println();
+
+        // Affichage matrice
+        for(int i = 0; i < relationExemple.length ; i++){
+            if (i == 0){
+                for(int k = 0; k < univers.length(); k++)
+                    System.out.print(" ");
+            }
+            else{
+                System.out.print(listeInfIrreductibles.get(i-1));
+                for(int k = 0; k < univers.length() - listeInfIrreductibles.get(i-1).length(); k++)
+                    System.out.print(" ");
+            }
+
+
+
+            System.out.print(" | ");
+            for (int j = 0; j < relationExemple[i].length; j++)
+                System.out.print(" " + relationExemple[i][j] + " ");
+            System.out.println();
+        }
     }
 
     /* ---------------------------------------------------------------------------------------*/

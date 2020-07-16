@@ -15,4 +15,6 @@ L'ensemble des fermés est initialisé avec la fermture de l'ensemble vide et es
 
 Création d'un dictionnaire correspondant à la liste des fils les plus proches de chaque fermé.
 
-Développement de l'algorithme permettant de calculer l'ensemble des inf-irréductibles. 
+Développement de l'algorithme permettant de calculer l'ensemble des inf-irréductibles.
+
+Construction de la matrice relation exemple vérifiant uniquement les dépendances fonctionnelles données en entrée.
