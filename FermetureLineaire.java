@@ -40,7 +40,7 @@ public class FermetureLineaire{
         System.out.println();
 
         /* Création de l'arbre des fermés et son affichage */
-        TreeMap arbreFermes = new TreeMap<String, Boolean>();
+        TreeMap<String, Boolean> arbreFermes = new TreeMap<String, Boolean>();
         ArbreFermes(arbreFermes, ensembleDesFermes);
         arbreFermes.headMap("");
         //System.out.println("Arbre des fermés : " + arbreFermes.keySet());
@@ -119,7 +119,7 @@ public class FermetureLineaire{
             }
 
         }
-        fermeture = TriRapideOrdreAlphabétique(fermeture);
+        fermeture = TriRapideOrdreAlphabetique(fermeture);
         return fermeture;
     }
 
@@ -257,7 +257,7 @@ public class FermetureLineaire{
     }
 
     /* Fonction tri par ordre alphabétique */
-    public static StringBuilder TriRapideOrdreAlphabétique (StringBuilder chaine) {
+    public static StringBuilder TriRapideOrdreAlphabetique (StringBuilder chaine) {
         int taille = chaine.length();
         int chaineAscii[] = new int[taille];
         for (int i = 0; i < taille; i++){
