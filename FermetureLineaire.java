@@ -1,11 +1,16 @@
 package Stage_LIMOS;
+import java.io.*;
 import java.util.*;
 
 public class FermetureLineaire{
     public static void main(String[] args) {
 
+        //Chemin pour sauvegarde des fichiers textes d'entrée et de sortie
+        final String chemin = "C:/Users/Anaïs Darricarrère/Desktop/Stage Limos/";
+
         //String univers = "ABCDEF";
-        String univers = "ABC";
+        //String univers = LectureUnivers(chemin +"universDFsVide.txt");
+        String univers = LectureUnivers(chemin +"universDFs.txt");
         System.out.println("Univers :" + univers);
         System.out.println("");
 
@@ -13,15 +18,16 @@ public class FermetureLineaire{
         /*DFs dF0 = new DFs("A", "BC");
         DFs dF1 = new DFs("E", "CF");
         DFs dF2 = new DFs("B", "E");
-        DFs dF3 = new DFs("CD", "EF");*/
+        DFs dF3 = new DFs("CD", "EF");
         DFs dF0 = new DFs("A", "B");
-        DFs dF1 = new DFs("", "C");
+        DFs dF1 = new DFs("", "C");*/
 
         /* Création de l'ensemble de DFs */
-        ArrayList<DFs> setOfDFs = new ArrayList<DFs>();
-        setOfDFs.add(dF0);
+        //ArrayList<DFs> setOfDFs = LectureEnsembleDfs(chemin + "universDFsVide.txt");
+        ArrayList<DFs> setOfDFs = LectureEnsembleDfs(chemin + "universDFs.txt");
+        /*setOfDFs.add(dF0);
         setOfDFs.add(dF1);
-        /*setOfDFs.add(dF2);
+        setOfDFs.add(dF2);
         setOfDFs.add(dF3);*/
 
         /* Affichage de l'ensemble de DFS */
@@ -36,8 +42,8 @@ public class FermetureLineaire{
         AllClosures(ensembleDesFermes, univers, setOfDFs);
 
         /* Affichage de l'ensemble des fermés */
-        AffichageEnsembleFermes(ensembleDesFermes);
-        System.out.println();
+        //AffichageEnsembleFermes(ensembleDesFermes);
+        //System.out.println();
 
         /* Création de l'arbre des fermés et son affichage */
         TreeMap<String, Boolean> arbreFermes = new TreeMap<String, Boolean>();
@@ -45,6 +51,7 @@ public class FermetureLineaire{
         arbreFermes.headMap("");
         //System.out.println("Arbre des fermés : " + arbreFermes.keySet());
         //System.out.println();
+        CreerFichierFermes(chemin, "arbreFermes.txt", arbreFermes);
 
         /* Création du graphe père/fils */
         Dictionary<String, ArrayList<String>> pereFils = new Hashtable<String, ArrayList<String>>();
@@ -56,12 +63,14 @@ public class FermetureLineaire{
 
         /* Calcul des inf-irréductibles */
         ArrayList<String> listeInfIrreductibles = EnsembleInfIrreductibles(pereFils,ensembleDesFermes, univers);
-        AffichageInfIrreductibles(listeInfIrreductibles);
-        System.out.println();
+        //AffichageInfIrreductibles(listeInfIrreductibles);
+        //System.out.println();
+        CreerFichierInfIrreductibles(chemin, "infIrreductibles.txt", listeInfIrreductibles);
 
         /* Calcul relation exemple */
         int [][] relationExemple = CreationRelationExemple(listeInfIrreductibles, univers);
-        AffichageRelationExemple(relationExemple, listeInfIrreductibles, univers);
+        //AffichageRelationExemple(relationExemple, listeInfIrreductibles, univers);
+        CreerFichierRelationExemple(chemin, "relationExemple.txt",relationExemple, listeInfIrreductibles, univers);
 
     }
 
@@ -537,5 +546,151 @@ public class FermetureLineaire{
         System.out.println("}");
     }
 
+    /* ---------------------------------------------------------------------------------------*/
+    /* -------------------------------FICHIER TEXTE-------------------------------------------*/
+    /* ---------------------------------------------------------------------------------------*/
+
+    /* Fonction lecture fichier texte comprenant l'univers*/
+    public static String LectureUnivers (String cheminFichier){
+        String univers = new String();
+        try {
+            File fichier = new File(cheminFichier);
+            FileReader reader = new FileReader(fichier);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            //Première ligne est l'univers
+            try {
+                String ligne = bufferedReader.readLine();
+                if (ligne != null){
+                    univers = ligne;
+                }
+                bufferedReader.close();
+                reader.close();
+            } catch (IOException e) {
+                System.out.println("Erreur lors de la lecture du fichier " + cheminFichier);
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Le fichier " + cheminFichier + " n'a pas été trouvé");
+        }
+        return univers;
+    }
+
+    /* Fonction lecture fichier texte comprenant les DFs*/
+
+    public static ArrayList<DFs> LectureEnsembleDfs (String cheminFichier){
+        ArrayList<DFs> ensembleDfs = new ArrayList<DFs>();
+        try {
+            File fichier = new File(cheminFichier);
+            FileReader reader = new FileReader(fichier);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            //Première ligne est l'univers
+            //Deuxième ligne vide
+            //Ensuite une ligne par DF de la forme "AB -> C" pour A,B-> C
+            try {
+                String ligne = new String();
+                int indiceLigne = 0;
+                ligne = bufferedReader.readLine();
+                while (ligne != null){
+                    indiceLigne++;
+                    if ((indiceLigne > 2) && (ligne.contains("->"))){
+                        String[] resultat = ligne.split("->");
+                        ensembleDfs.add(new DFs(resultat[0].trim(),resultat[1].trim()));
+                    }
+                    ligne = bufferedReader.readLine();
+                }
+                bufferedReader.close();
+                reader.close();
+            } catch (IOException e) {
+                System.out.println("Erreur lors de la lecture du fichier " + cheminFichier);
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Le fichier " + cheminFichier + " n'a pas été trouvé");
+        }
+        return ensembleDfs;
+    }
+
+    /* Fonctions création fichiers textes sauvergardes */
+    public static void CreerFichierFermes(String chemin, String nomFichier, TreeMap<String, Boolean> arbreFermes){
+        File fichier = new File(chemin + nomFichier);
+        try {
+            // Creation du fichier
+            fichier.createNewFile();
+            FileWriter writer = new FileWriter(fichier);
+            try {
+                writer.write("Arbre des fermés : \n" + arbreFermes.keySet());
+            } finally {
+                writer.close();
+            }
+        }catch (Exception e) {
+            System.out.println("Creation du fichier " + nomFichier + " impossible");
+        }
+    }
+
+    public static void CreerFichierInfIrreductibles(String chemin, String nomFichier, ArrayList<String> listeInfIrreductibles){
+        File fichier = new File(chemin + nomFichier);
+        try {
+            // Creation du fichier
+            fichier.createNewFile();
+            FileWriter writer = new FileWriter(fichier);
+            try {
+                writer.write("Ensemble des inf-irréductibles : \n");
+                writer.write("{");
+                for (int i = 0; i < listeInfIrreductibles.size() - 1; i++) {
+                    writer.write(listeInfIrreductibles.get(i) + " , ");
+                }
+                writer.write(listeInfIrreductibles.get(listeInfIrreductibles.size() - 1));
+                writer.write("}");
+            } finally {
+                writer.close();
+            }
+        }catch (Exception e) {
+            System.out.println("Creation du fichier " + nomFichier + " impossible");
+        }
+    }
+
+    public static void CreerFichierRelationExemple(String chemin, String nomFichier , int[][] relationExemple, ArrayList<String> listeInfIrreductibles, String univers){
+        File fichier = new File(chemin + nomFichier);
+        try {
+            // Creation du fichier
+            fichier.createNewFile();
+            FileWriter writer = new FileWriter(fichier);
+            try {
+                writer.write("Relation exemple : \n");
+                //Première ligne
+                for (int i = 0; i < univers.length(); i++)
+                    writer.write(" ");
+                writer.write(" | ");
+                for (int i = 0; i < univers.length(); i++)
+                    writer.write(" " + univers.charAt(i) + " ");
+                writer.write("\n");
+                //Ligne
+                int tailleLigne = 4*univers.length() + 3 ;
+                for(int k = 0 ; k < tailleLigne; k++){
+                    writer.write("_");
+                }
+                writer.write("\n");
+
+                // Affichage matrice
+                for(int i = 0; i < relationExemple.length ; i++){
+                    if (i == 0){
+                        for(int k = 0; k < univers.length(); k++)
+                            writer.write(" ");
+                    }
+                    else{
+                        writer.write(listeInfIrreductibles.get(i-1));
+                        for(int k = 0; k < univers.length() - listeInfIrreductibles.get(i-1).length(); k++)
+                            writer.write(" ");
+                    }
+                    writer.write(" | ");
+                    for (int j = 0; j < relationExemple[i].length; j++)
+                        writer.write(" " + relationExemple[i][j] + " ");
+                    writer.write("\n");
+                }
+            } finally {
+                writer.close();
+            }
+        }catch (Exception e) {
+            System.out.println("Creation du fichier " + nomFichier + " impossible");
+        }
+    }
 
 }
