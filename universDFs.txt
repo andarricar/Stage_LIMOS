@@ -1,0 +1,6 @@
+ABCDEF
+
+A -> BC
+E -> CF
+B -> E
+CD -> EF
