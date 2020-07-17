@@ -6,6 +6,8 @@ En entrée, la procédure prend en argument un fichier texte construit de la man
 - Deuxième ligne : ligne blanche de séparation
 - Troisième ligne et jusqu'à la fin du fichier : une ligne par dépendance fonctionnelle du type A,B -> C écrite sous la forme " AB -> C"
 
+Il doit y avoir seulement une virgule entre les différents attributs de l'univers et des dépendances fonctionelles.
+
 Algorithmes de fermeture d'un ensemble d'attributs à partir d'un ensemble de DFs.
 - Fermeture par niveaux 
 - Fermeture linéaire : meilleure implémentation

@@ -9,8 +9,8 @@ public class FermetureLineaire{
         final String chemin = "C:/Users/Anaïs Darricarrère/Desktop/Stage Limos/";
 
         //String univers = "ABCDEF";
-        //String univers = LectureUnivers(chemin +"universDFsVide.txt");
-        String univers = LectureUnivers(chemin +"universDFs.txt");
+        String univers = LectureUnivers(chemin +"universDFsVide.txt");
+        //String univers = LectureUnivers(chemin +"universDFs.txt");
         System.out.println("Univers :" + univers);
         System.out.println("");
 
@@ -23,8 +23,8 @@ public class FermetureLineaire{
         DFs dF1 = new DFs("", "C");*/
 
         /* Création de l'ensemble de DFs */
-        //ArrayList<DFs> setOfDFs = LectureEnsembleDfs(chemin + "universDFsVide.txt");
-        ArrayList<DFs> setOfDFs = LectureEnsembleDfs(chemin + "universDFs.txt");
+        ArrayList<DFs> setOfDFs = LectureEnsembleDfs(chemin + "universDFsVide.txt");
+        //ArrayList<DFs> setOfDFs = LectureEnsembleDfs(chemin + "universDFs.txt");
         /*setOfDFs.add(dF0);
         setOfDFs.add(dF1);
         setOfDFs.add(dF2);
@@ -51,7 +51,8 @@ public class FermetureLineaire{
         arbreFermes.headMap("");
         //System.out.println("Arbre des fermés : " + arbreFermes.keySet());
         //System.out.println();
-        CreerFichierFermes(chemin, "arbreFermes.txt", arbreFermes);
+        CreerFichierFermes(chemin, "arbreFermesVide.txt", arbreFermes);
+        //CreerFichierFermes(chemin, "arbreFermes.txt", arbreFermes);
 
         /* Création du graphe père/fils */
         Dictionary<String, ArrayList<String>> pereFils = new Hashtable<String, ArrayList<String>>();
@@ -65,12 +66,14 @@ public class FermetureLineaire{
         ArrayList<String> listeInfIrreductibles = EnsembleInfIrreductibles(pereFils,ensembleDesFermes, univers);
         //AffichageInfIrreductibles(listeInfIrreductibles);
         //System.out.println();
-        CreerFichierInfIrreductibles(chemin, "infIrreductibles.txt", listeInfIrreductibles);
+        CreerFichierInfIrreductibles(chemin, "infIrreductiblesVide.txt", listeInfIrreductibles);
+        //CreerFichierInfIrreductibles(chemin, "infIrreductibles.txt", listeInfIrreductibles);
 
         /* Calcul relation exemple */
         int [][] relationExemple = CreationRelationExemple(listeInfIrreductibles, univers);
         //AffichageRelationExemple(relationExemple, listeInfIrreductibles, univers);
-        CreerFichierRelationExemple(chemin, "relationExemple.txt",relationExemple, listeInfIrreductibles, univers);
+        CreerFichierRelationExemple(chemin, "relationExempleVide.txt",relationExemple, listeInfIrreductibles, univers);
+        //CreerFichierRelationExemple(chemin, "relationExemple.txt",relationExemple, listeInfIrreductibles, univers);
 
     }
 
@@ -561,7 +564,11 @@ public class FermetureLineaire{
             try {
                 String ligne = bufferedReader.readLine();
                 if (ligne != null){
-                    univers = ligne;
+                    if(ligne.contains(",")){
+                        String[] attributs = ligne.split(",");
+                        for (int i = 0; i < attributs.length; i++)
+                            univers = univers + attributs[i];
+                    }
                 }
                 bufferedReader.close();
                 reader.close();
@@ -593,7 +600,23 @@ public class FermetureLineaire{
                     indiceLigne++;
                     if ((indiceLigne > 2) && (ligne.contains("->"))){
                         String[] resultat = ligne.split("->");
-                        ensembleDfs.add(new DFs(resultat[0].trim(),resultat[1].trim()));
+                        String partieGauche = new String();
+                        String partieDroite = new String();
+                        if(resultat[0].trim().contains(",")){
+                            String[] attributsGauche = resultat[0].trim().split(",");
+                            for (int i = 0; i < attributsGauche.length; i++)
+                                partieGauche = partieGauche + attributsGauche[i];
+                        }
+                        else
+                            partieGauche = resultat[0].trim();
+                        if(resultat[1].trim().contains(",")){
+                            String[] attributsDroite = resultat[1].trim().split(",");
+                            for (int i = 0; i < attributsDroite.length; i++)
+                                partieDroite = partieDroite + attributsDroite[i];
+                        }
+                        else
+                            partieDroite = resultat[1].trim();
+                        ensembleDfs.add(new DFs(partieGauche,partieDroite));
                     }
                     ligne = bufferedReader.readLine();
                 }
